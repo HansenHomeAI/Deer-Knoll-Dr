@@ -136,7 +136,24 @@
             user-select: none;
         }
 
-        /* Hover circle */
+        /* Hover circle for devices with actual hover capabilities */
+        @media (hover:hover) {
+            .menu-button:hover::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.15);
+                -webkit-transform: scale(1);
+                transform: scale(1);
+                -webkit-transition: -webkit-transform 0.3s ease, opacity 0.3s ease;
+                transition: transform 0.3s ease, opacity 0.3s ease;
+                opacity: 1;
+                z-index: 0;
+            }
+        }
+
+        /* For touch devices, we'll use a class "active" added via JS to simulate the hover effect */
         .menu-button::before {
             content: "";
             position: absolute;
@@ -145,13 +162,13 @@
             background: rgba(255,255,255,0.15);
             -webkit-transform: scale(0);
             transform: scale(0);
-            -webkit-transition: -webkit-transform 0.3s ease, opacity 0.3s ease;
-            transition: transform 0.3s ease, opacity 0.3s ease;
             opacity: 0;
             z-index: 0;
+            -webkit-transition: -webkit-transform 0.3s ease, opacity 0.3s ease;
+            transition: transform 0.3s ease, opacity 0.3s ease;
         }
 
-        .menu-button:hover::before {
+        .menu-button.active::before {
             -webkit-transform: scale(1);
             transform: scale(1);
             opacity: 1;
@@ -205,15 +222,18 @@
             pointer-events: auto;
         }
 
+        /* Ensure no native scrollbar: use overflow:scroll and hide scrollbar completely */
         .details-content {
             flex: 1;
             margin: 4px; 
-            overflow-y: auto;
+            overflow-y: scroll;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
         }
+
         .details-content::-webkit-scrollbar {
             width: 0;
+            height: 0; /* Ensure no visible scrollbar on iOS */
         }
 
         .details-inner {
@@ -437,29 +457,25 @@
         let innerPaddingLeftRight = basePaddingLeftRight;
 
         if (mode === 'desktop') {
-            // Desktop: Increase margins by 20px
             menuLeft += 20; 
             menuBottom += 20;
             detailsLeft += 20;
             detailsRight += 20;
             detailsTop += 20;
             detailsBottom += 20;
-            // scaleFactor remains 1.0
         } else if (mode === 'tablet') {
-            // Tablet: 0.9 scale
             scaleFactor = 0.9;
             h1Size = Math.round(baseH1 * 0.9);
             pSize = Math.round(baseP * 0.9);
             disclaimerSize = Math.round(baseDisclaimer * 0.9);
         } else {
-            // Mobile: margins are base -5px
+            // Mobile
             menuLeft = baseMenuLeft - 5;
             menuBottom = baseMenuBottom - 5;
             detailsLeft = baseDetailsLeft - 5;
             detailsRight = baseDetailsRight - 5;
             detailsTop = baseDetailsTop - 5;
             detailsBottom = baseDetailsBottom - 10;
-            // 0.8 scale
             scaleFactor = 0.8;
             h1Size = Math.round(baseH1 * 0.8);
             pSize = Math.round(baseP * 0.8);
@@ -468,22 +484,18 @@
             innerPaddingLeftRight = basePaddingLeftRight - 15;
         }
 
-        // Position the menu with adjusted margins
         menuContainer.style.bottom = menuBottom + 'px';
         menuContainer.style.left = menuLeft + 'px';
 
-        // Scale the entire menu container
         menuContainer.style.webkitTransform = 'scale(' + scaleFactor + ')';
         menuContainer.style.transform = 'scale(' + scaleFactor + ')';
 
-        // Position and sizing for details box
         detailsBox.style.top = detailsTop + 'px';
         detailsBox.style.bottom = detailsBottom + 'px';
         detailsBox.style.left = detailsLeft + 'px';
         detailsBox.style.right = detailsRight + 'px';
         detailsBox.style.maxHeight = '';
 
-        // Adjust fonts in details
         const h1s = detailsBox.querySelectorAll('h1');
         h1s.forEach(h => { h.style.fontSize = h1Size + 'px'; });
 
@@ -493,22 +505,18 @@
         const disclaimers = detailsBox.querySelectorAll('.legal-disclaimer');
         disclaimers.forEach(d => { d.style.fontSize = disclaimerSize + 'px'; });
 
-        // Adjust inner padding of details-inner
         detailsInner.style.padding = innerPaddingTopBottom + 'px ' + innerPaddingLeftRight + 'px';
     }
 
     function animateIconChange(imgElement, newSrc) {
-        // First, animate the shrink
         imgElement.style.animation = 'none';
-        imgElement.offsetHeight; // Force reflow to ensure animation restarts
+        imgElement.offsetHeight;
         imgElement.style.webkitAnimation = 'shrinkIcon 0.1s ease forwards';
         imgElement.style.animation = 'shrinkIcon 0.1s ease forwards';
 
         function handleShrink(e) {
             if (e.animationName === 'shrinkIcon') {
-                // At the end of shrink, change the icon source
                 if (newSrc) imgElement.src = newSrc;
-                // Now animate expansion
                 imgElement.style.animation = 'none';
                 imgElement.style.webkitAnimation = 'none';
                 imgElement.offsetHeight; 
@@ -668,6 +676,21 @@
     }
 
     customScrollbar.style.opacity = '0';
+
+    // Handle hover circle for touch devices: add/remove 'active' on touchstart/touchend
+    document.querySelectorAll('.menu-button').forEach(btn => {
+        btn.addEventListener('touchstart', () => {
+            btn.classList.add('active');
+        }, {passive: true});
+
+        btn.addEventListener('touchend', () => {
+            btn.classList.remove('active');
+        }, {passive: true});
+
+        btn.addEventListener('touchcancel', () => {
+            btn.classList.remove('active');
+        }, {passive: true});
+    });
 
     // Apply layout mode on load and on resize
     window.addEventListener('resize', applyLayoutMode);
