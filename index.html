@@ -348,6 +348,22 @@
                 transform: scale(1);
             }
         }
+        
+        
+        /* Add this below your existing styles */
+.touch-scrollbars {
+    scrollbar-width: auto !important; /* For Firefox */
+}
+.touch-scrollbars::-webkit-scrollbar {
+    width: 8px; /* or whatever width you like for native scrollbar on iOS/Android */
+    height: 8px;
+}
+
+        
+        
+        
+        
+        
     </style>
 </head>
 <body>
@@ -676,6 +692,27 @@
     }
 
     customScrollbar.style.opacity = '0';
+
+
+// Detect if the device is touch-capable
+const isTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+// If it's a touch device, disable custom scrollbar and revert to native scrollbar
+if (isTouchDevice) {
+    // Hide the custom scrollbar entirely
+    customScrollbar.style.display = 'none';
+    
+    // Remove the "no visible scrollbar" styles so that native scrollbar can appear
+    detailsContent.classList.add('touch-scrollbars');
+    // Also ensure overflow is set to auto to allow native scrolling
+    detailsContent.style.overflowY = 'auto';
+}
+
+
+
+
+
+
 
     // Handle hover circle for touch devices: add/remove 'active' on touchstart/touchend
     document.querySelectorAll('.menu-button').forEach(btn => {
